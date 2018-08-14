@@ -28,6 +28,8 @@ curpos = [0,0]
 
 player = obj('@',"user",100,1)
 
+inventory =[]
+
 ##************************************************************************
 
 
@@ -65,10 +67,10 @@ def add_obj(o,x,y):
     if objs[x,y] == None:
         objs[x,y]=[o,[]]
     else:
-        print("2 scooops!??!?")
+        #print("2 scooops!??!?")
         multi_obj = [o,objs[x,y]]
         objs[x,y]=multi_obj
-    print(objs[x,y])
+    #print(objs[x,y])
     return
 
 def remove_obj(pos):
@@ -94,7 +96,6 @@ def empty(pos):
             return False
         else:
             return True and empty(checksquare[1])
-        
     
 
 def move(cmd):
@@ -110,16 +111,43 @@ def move(cmd):
     elif curcommand == 'd':
         temppos[0]+=1
     if empty(temppos):
-        print("the square's empty, I swear")
+        #print("the square's empty, I swear")
         remove_obj(curpos)
         curpos = temppos
         add_obj(player,curpos[0],curpos[1])
         return True
     return False
 
+
 ##
+##
+
+def action(cmd):
+    global inventory
+    global curpos
+    if cmd in ["w","a","s","d"]:
+        return move(cmd)
+    elif cmd == 'g':
+        items = []
+        remove_obj(curpos)
+        here=objs[curpos[0],curpos[1]]
+        print(here)
+        while here != []:
+            print(here) 
+            items += [here[0]]
+            remove_obj(curpos)
+            here=objs[curpos[0],curpos[1]]            
+        inventory += items
+        print(inventory)
+        add_obj(player,curpos[0],curpos[1])
+        return True 
+    else:
+        return False
+
+
+##******************************************************************************
 ##Level Creation Area (Also known as scenery, also known as props)
-##
+##******************************************************************************
 
 add_obj(player,0,0)
 
@@ -127,11 +155,11 @@ for i in range(0,20):
     add_obj(make_wall(),i,1)
     add_obj(make_wall(),i,10)
 
-add_obj(obj('=',"ammo",20,0),5,5)
+add_obj(obj('=',"ammo",20,0),1,0)
 
-##
-## 
-##
+##******************************************************************************
+##******************************************************************************
+##******************************************************************************
 
 
 ##
@@ -139,10 +167,10 @@ add_obj(obj('=',"ammo",20,0),5,5)
 ##
 
 while 1:
-    moved = False
-    while not moved:
+    actioned = False
+    while not actioned:
         curcommand = input('_')
         print()
-        moved = move(curcommand)
+        actioned = action(curcommand)
         make_screen(curpos)
-    print(curpos)
+    #print(curpos)
