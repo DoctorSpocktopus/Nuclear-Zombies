@@ -3,22 +3,22 @@ import os
 import numpy as np
 
 class obj:
-    def __init__(obj,x,y,char,name,hp,solid):
-        obj.x = x #int
-        obj.y = y #int
+    def __init__(obj,char,name,hp,solid):
         obj.char=char
         obj.name = name #str, len =4
         obj.hp = hp #int 
         obj.solid = solid #int, 0-2
     def __repr__(obj):
-        return "({0},{1},{2},{3},{4},{5})".format(obj.x,obj.y,obj.char,obj.name,obj.hp,obj.solid)
+        return "({0},{1},{2},{3},{4},{5})".format(obj.char,obj.name,obj.hp,obj.solid)
 
 #Some default objects
 
-def make_wall(x,y):
+def make_wall():
     wallchar = 'O'
     wallhp = 1000
-    return obj(x,y,wallchar,"wall",wallhp,2)
+    return obj(wallchar,"wall",wallhp,2)
+
+
 
 ##************************************************************************
 
@@ -26,7 +26,7 @@ def make_wall(x,y):
 
 curpos = [0,0]
 
-player = obj(0,0,'@',"user",100,1)
+player = obj('@',"user",100,1)
 
 ##************************************************************************
 
@@ -62,31 +62,32 @@ def make_screen(pos):
     
     return
 
-def add_obj(o):
-    if not objs[o.x,o.y]:
-        objs[o.x,o.y]=o
+def add_obj(o,x,y):
+    if not objs[x,y]:
+        objs[x,y]=[o,[]]
     else:
         print("2 scooops!??!?")
-        multi_obj = [o,objs[o.x,o.y]]
-        objs[o.x,o.y]=multi_obj
+        multi_obj = [o,objs[x,y]]
+        objs[x,y]=multi_obj
     return
 
 def remove_obj(pos):
-    if type(objs[pos[0],pos[1]])==type(player):    
-        objs[pos[0],pos[1]]=''
-    #else:
-     #   objs[pos[0],pos[1]]=objs[pos[0],pos[1]][1]
+    objs[pos[0],pos[1]]=objs[pos[0],pos[1]][1]
+
     
 for i in range(0,20):
-    add_obj(make_wall(i,1))
-    add_obj(make_wall(i,10))
+    add_obj(make_wall(),i,1)
+    add_obj(make_wall(),i,10)
 
 
 
 while 1:
     curcommand = input('_')
     print()
-    remove_obj(curpos)
+    try:
+        remove_obj(curpos)
+    except:
+        print("could not remove player?")
     if   curcommand == "w":
         curpos[1]-=1
     elif curcommand == 'a':
@@ -95,7 +96,5 @@ while 1:
         curpos[1]+=1
     elif curcommand == 'd':
         curpos[0]+=1
-    player.x=curpos[0]
-    player.y=curpos[1]
-    add_obj(player)
+    add_obj(player,curpos[0],curpos[1])
     make_screen(curpos)
