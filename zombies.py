@@ -9,7 +9,7 @@ class obj:
         obj.hp = hp #int 
         obj.solid = solid #int, 0-2
     def __repr__(obj):
-        return "({0},{1},{2},{3},{4},{5})".format(obj.char,obj.name,obj.hp,obj.solid)
+        return "({0},{1},{2},{3})".format(obj.char,obj.name,obj.hp,obj.solid)
 
 #Some default objects
 
@@ -39,7 +39,6 @@ map_size = [200,200]
 
 objs = np.empty((map_size[0],map_size[1]),dtype=type(player),order='C')
 
-
 def make_screen(pos):
     
     screen = ""
@@ -63,16 +62,52 @@ def make_screen(pos):
     return
 
 def add_obj(o,x,y):
-    if not objs[x,y]:
+    print(objs[x,y])
+    if objs[x,y] == None:
         objs[x,y]=[o,[]]
     else:
         print("2 scooops!??!?")
         multi_obj = [o,objs[x,y]]
         objs[x,y]=multi_obj
+    print(objs[x,y])
     return
 
 def remove_obj(pos):
+    #print(objs[pos[0],pos[1]])
     objs[pos[0],pos[1]]=objs[pos[0],pos[1]][1]
+    #print(objs[pos[0],pos[1]])
+
+## empty(pos): Consumes a position (x,y) and returns False if something of greater
+## than 0 solidness is inside the square, True otherwise. 
+## empty(list(int,int)->bool)
+
+def empty(pos):
+    checksquare = objs[pos[0],pos[1]]
+    if checksquare == None or checksquare == []:
+        return True
+    return False
+        
+    
+
+def move(cmd):
+    global curpos 
+    
+    temppos = curpos.copy()
+    if   curcommand == "w":
+        temppos[1]-=1
+    elif curcommand == 'a':
+        temppos[0]-=1
+    elif curcommand == 's':
+        temppos[1]+=1
+    elif curcommand == 'd':
+        temppos[0]+=1
+    if empty(temppos):
+        print("the square's empty, I swear")
+        remove_obj(curpos)
+        curpos = temppos
+        add_obj(player,curpos[0],curpos[1])
+        return True
+    return False
 
     
 for i in range(0,20):
@@ -80,21 +115,13 @@ for i in range(0,20):
     add_obj(make_wall(),i,10)
 
 
+add_obj(player,0,0)
 
 while 1:
-    curcommand = input('_')
-    print()
-    try:
-        remove_obj(curpos)
-    except:
-        print("could not remove player?")
-    if   curcommand == "w":
-        curpos[1]-=1
-    elif curcommand == 'a':
-        curpos[0]-=1
-    elif curcommand == 's':
-        curpos[1]+=1
-    elif curcommand == 'd':
-        curpos[0]+=1
-    add_obj(player,curpos[0],curpos[1])
-    make_screen(curpos)
+    moved = False
+    while not moved:
+        curcommand = input('_')
+        print()
+        moved = move(curcommand)
+        make_screen(curpos)
+    
