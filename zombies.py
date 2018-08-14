@@ -62,7 +62,6 @@ def make_screen(pos):
     return
 
 def add_obj(o,x,y):
-    print(objs[x,y])
     if objs[x,y] == None:
         objs[x,y]=[o,[]]
     else:
@@ -85,7 +84,16 @@ def empty(pos):
     checksquare = objs[pos[0],pos[1]]
     if checksquare == None or checksquare == []:
         return True
-    return False
+    if checksquare[1] == []:
+        if checksquare[0].solid > 0:
+            return False
+        else:
+            return True
+    else:
+        if checksquare[0].solid > 0:
+            return False
+        else:
+            return True and empty(checksquare[1])
         
     
 
@@ -109,13 +117,26 @@ def move(cmd):
         return True
     return False
 
-    
+##
+##Level Creation Area (Also known as scenery, also known as props)
+##
+
+add_obj(player,0,0)
+
 for i in range(0,20):
     add_obj(make_wall(),i,1)
     add_obj(make_wall(),i,10)
 
+add_obj(obj('=',"ammo",20,0),5,5)
 
-add_obj(player,0,0)
+##
+## 
+##
+
+
+##
+##The little loop that could ;>
+##
 
 while 1:
     moved = False
@@ -124,4 +145,4 @@ while 1:
         print()
         moved = move(curcommand)
         make_screen(curpos)
-    
+    print(curpos)
