@@ -18,6 +18,47 @@ def make_wall():
     wallhp = 1000
     return obj(wallchar,"wall",wallhp,2)
 
+##
+##zzzzz  zzz  z   z zzz  zzz zzzz  zzz
+##   z  z   z zz zz z  z  z  z    z
+##  z   z   z z z z zzz   z  zzz   zz
+## z    z   z z   z z  z  z  z       z
+##zzzzz  zzz  z   z zzz  zzz zzzz zzz 
+##
+
+zombielist = []
+
+def make_zombie(x,y):
+    global zombielist 
+    
+    zombiehp =25
+    newzombie = obj('z',"zomb",zombiehp,2) 
+    zombielist += [[newzombie,x,y]]
+    add_obj(newzombie,x,y)
+    return newzombie
+
+
+
+
+def move_zombies():
+    global zombielist
+    
+    for z in zombielist:
+        x = z[1]
+        y = z[2]
+        #random movement
+        cmd = random.randint(1,9)
+        newpos = move_obj(z[0],cmd,x,y)
+        z[1]=newpos[0]
+        z[2]=newpos[1]
+        print(zombielist)
+    return     
+        
+        
+    
+##
+##
+##
 
 
 ##************************************************************************
@@ -81,6 +122,46 @@ def remove_obj(pos):
 ## empty(pos): Consumes a position (x,y) and returns False if something of greater
 ## than 0 solidness is inside the square, True otherwise. 
 ## empty(list(int,int)->bool)
+
+def move_obj(obj,cmd,x,y):
+    newpos = []
+    if cmd == 1:
+        #x-1,y+1
+        newpos = [x+1,y+1]
+    elif cmd == 2:
+        #y+1
+        newpos = [x,y+1]
+    elif cmd == 3:
+        #x+1,y+1
+        newpos=[x+1,y+1]
+        
+    elif cmd == 4:
+        #x-1
+        newpos=[x-1,y]
+        
+    elif cmd == 5:
+        #0
+        newpos = [x,y]
+    elif cmd == 6:
+        #x+1
+        newpos = [x+1,y]
+        
+    elif cmd == 7:
+        #x-1,y-1
+        newpos = [x-1,y-1]
+        
+    elif cmd == 8:
+        #y-1
+        newpos = [x,y-1]
+    elif cmd == 9:    
+        #x+1,y-1
+        newpos = [x+1,y-1]
+        
+    if empty(newpos):
+        remove_obj([x,y])
+        add_obj(obj,newpos[0],newpos[1])
+        return newpos
+    return [x,y]
 
 def empty(pos):
     checksquare = objs[pos[0],pos[1]]
@@ -157,18 +238,21 @@ for i in range(0,20):
 
 add_obj(obj('=',"ammo",20,0),1,0)
 
+make_zombie(0,2)
+
 ##******************************************************************************
 ##******************************************************************************
 ##******************************************************************************
 
 
 ##
-##The little loop that could ;>
+##The little loop that could 
 ##
 
 while 1:
     actioned = False
     while not actioned:
+        move_zombies()
         curcommand = input('_')
         print()
         actioned = action(curcommand)
