@@ -1,6 +1,7 @@
 import random
 import os
 import numpy as np
+import math
 
 class obj:
     def __init__(obj,char,name,hp,solid):
@@ -18,47 +19,7 @@ def make_wall():
     wallhp = 1000
     return obj(wallchar,"wall",wallhp,2)
 
-##
-##zzzzz  zzz  z   z zzz  zzz zzzz  zzz
-##   z  z   z zz zz z  z  z  z    z
-##  z   z   z z z z zzz   z  zzz   zz
-## z    z   z z   z z  z  z  z       z
-##zzzzz  zzz  z   z zzz  zzz zzzz zzz 
-##
 
-zombielist = []
-
-def make_zombie(x,y):
-    global zombielist 
-    
-    zombiehp =25
-    newzombie = obj('z',"zomb",zombiehp,2) 
-    zombielist += [[newzombie,x,y]]
-    add_obj(newzombie,x,y)
-    return newzombie
-
-
-
-
-def move_zombies():
-    global zombielist
-    
-    for z in zombielist:
-        x = z[1]
-        y = z[2]
-        #random movement
-        cmd = random.randint(1,9)
-        newpos = move_obj(z[0],cmd,x,y)
-        z[1]=newpos[0]
-        z[2]=newpos[1]
-        print(zombielist)
-    return     
-        
-        
-    
-##
-##
-##
 
 
 ##************************************************************************
@@ -119,6 +80,18 @@ def remove_obj(pos):
     objs[pos[0],pos[1]]=objs[pos[0],pos[1]][1]
     #print(objs[pos[0],pos[1]])
 
+def distance(pos1, pos2):
+    dis = math.sqrt((pos1[0]-pos2[0])**2+(pos1[1]-pos2[1])**2)
+    return dis
+
+def build_radius(r,x,y):
+    points = []
+    for i in range(-r,r):
+        for j in range(-r,r):
+            if distance([x,y],[i,j])<=r:
+                points +=[[i,j]]
+    return points
+
 ## empty(pos): Consumes a position (x,y) and returns False if something of greater
 ## than 0 solidness is inside the square, True otherwise. 
 ## empty(list(int,int)->bool)
@@ -127,7 +100,7 @@ def move_obj(obj,cmd,x,y):
     newpos = []
     if cmd == 1:
         #x-1,y+1
-        newpos = [x+1,y+1]
+        newpos = [x-1,y+1]
     elif cmd == 2:
         #y+1
         newpos = [x,y+1]
@@ -191,6 +164,7 @@ def move(cmd):
         temppos[1]+=1
     elif curcommand == 'd':
         temppos[0]+=1
+    
     if empty(temppos):
         #print("the square's empty, I swear")
         remove_obj(curpos)
@@ -201,6 +175,83 @@ def move(cmd):
 
 
 ##
+##zzzzz  zzz  z   z zzz  zzz zzzz  zzz
+##   z  z   z zz zz z  z  z  z    z
+##  z   z   z z z z zzz   z  zzz   zz
+## z    z   z z   z z  z  z  z       z
+##zzzzz  zzz  z   z zzz  zzz zzzz zzz 
+##
+
+zombielist = []
+
+def make_zombie(x,y):
+    global zombielist 
+    
+    zombiehp =25
+    newzombie = obj('z',"zomb",zombiehp,2) 
+    zombielist += [[newzombie,x,y]]
+    add_obj(newzombie,x,y)
+    return newzombie
+
+
+
+
+def move_zombies():
+    global zombielist
+    global curpos
+    
+    detectr = 5
+    
+    for z in zombielist:
+        x = z[1]
+        y = z[2]
+        event = random.randint(1, 20)
+        
+        detectr = 5
+        
+        #random movement
+        #if event in range(1,4):
+        #    cmd = random.randint(1,9)
+        #    newpos = move_obj(z[0],cmd,x,y)
+        #    z[1]=newpos[0]
+        #    z[2]=newpos[1]
+        if 1:#distance([x,y],curpos)<=detectr:
+            cmd = 0
+            if curpos[1] == y:
+                if curpos[0] == x:
+                    cmd = 5
+                elif curpos[0] < x:
+                    cmd = 4
+                elif curpos[0] > x:
+                    cmd = 6
+            elif curpos[1] > y:
+                if curpos[0] == x:
+                    cmd = 2
+                elif curpos[0] < x:
+                    cmd = 1
+                elif curpos[0] > x:
+                    cmd = 3
+            elif curpos[1] < y:
+                if curpos[0] == x:
+                    cmd = 8
+                elif curpos[0] < x:
+                    cmd = 7
+                elif curpos[0] > x:
+                    cmd = 9
+            newpos = move_obj(z[0],cmd,x,y)
+            z[1]=newpos[0]
+            z[2]=newpos[1]        
+    return  
+        
+        
+    
+##
+##  ____    _       ___    _    _  ____   ____
+## |  _ \  | |     / _ \  \ \_/ / |  __| |  _ \
+## | |_| | | |    | |_| |  \   /  | |_   | |_| |
+## |  __/  | |    |  _  |   | |   |  _|  |    /
+## | |     | |__  | | | |   | |   | |__  | |\ \
+## |_|     |____| |_| |_|   |_|   |____| |_| \_\
 ##
 
 def action(cmd):
@@ -226,9 +277,12 @@ def action(cmd):
         return False
 
 
-##******************************************************************************
-##Level Creation Area (Also known as scenery, also known as props)
-##******************************************************************************
+##  _    _          
+## |_|xx|X|XXXXXXXX|||
+##      |X|         $
+##      |X|         $
+##      |X|      SETTING
+##      |X| PROPS & 
 
 add_obj(player,0,0)
 
@@ -239,6 +293,11 @@ for i in range(0,20):
 add_obj(obj('=',"ammo",20,0),1,0)
 
 make_zombie(0,2)
+make_zombie(0,3)
+make_zombie(2,0)
+make_zombie(2,2)
+make_zombie(2,3)
+make_zombie(4,15)
 
 ##******************************************************************************
 ##******************************************************************************
@@ -248,6 +307,8 @@ make_zombie(0,2)
 ##
 ##The little loop that could 
 ##
+
+make_screen(curpos)
 
 while 1:
     actioned = False
