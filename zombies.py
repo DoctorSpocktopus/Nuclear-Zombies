@@ -26,18 +26,18 @@ def make_wall():
 
 ## Defining player variables 
 
-curpos = [100,100]
+curpos = [100,103]
 
 player = obj('@',"user",100,1)
 
-inventory =[]
+inventory = []
 
 ##************************************************************************
 
 
 ##terminal is 23 characters high, -1 for the input line 
 
-screen_size = [55,21]
+screen_size = [21,21]
 
 map_size = [200,200]
 
@@ -76,10 +76,8 @@ def add_obj(o,x,y):
     return
 
 def remove_obj(pos):
-    #print(objs[pos[0],pos[1]])
     objs[pos[0],pos[1]]=objs[pos[0],pos[1]][1]
-    #print(objs[pos[0],pos[1]])
-
+    
 def distance(pos1, pos2):
     dis = math.sqrt((pos1[0]-pos2[0])**2+(pos1[1]-pos2[1])**2)
     return dis
@@ -96,8 +94,10 @@ def build_radius(r,pos):
 ## than 0 solidness is inside the square, True otherwise. 
 ## empty(list(int,int)->bool)
 
-def move_obj(obj,cmd,x,y):
-    newpos = []
+def move_obj(obj,cmd,pos):
+    newpos = pos.copy()
+    x=newpos[0]
+    y=newpos[1]
     if cmd == 1:
         #x-1,y+1
         newpos = [x-1,y+1]
@@ -129,9 +129,8 @@ def move_obj(obj,cmd,x,y):
     elif cmd == 9:    
         #x+1,y-1
         newpos = [x+1,y-1]
-        
     if empty(newpos):
-        remove_obj([x,y])
+        remove_obj([pos[0],pos[1]])
         add_obj(obj,newpos[0],newpos[1])
         return newpos
     return [x,y]
@@ -240,7 +239,7 @@ def move_zombies():
         ## random movement
         if event in randmove or (not close and not closez):
             cmd = random.randint(1,9)
-            newpos = move_obj(z[0],cmd,x,y)
+            newpos = move_obj(z[0],cmd,[x,y])
             z[1]=newpos[0]
             z[2]=newpos[1]
         elif close and (event in dirmove):
@@ -266,7 +265,7 @@ def move_zombies():
                     cmd = 7
                 elif curpos[0] > x:
                     cmd = 9
-            newpos = move_obj(z[0],cmd,x,y)
+            newpos = move_obj(z[0],cmd,[x,y])
             z[1]=newpos[0]
             z[2]=newpos[1]
         #moves towards a zombie
@@ -293,7 +292,7 @@ def move_zombies():
                     cmd = 7
                 elif zpos[0] > x:
                     cmd = 9
-            newpos = move_obj(z[0],cmd,x,y)
+            newpos = move_obj(z[0],cmd,[x,y])
             z[1]=newpos[0]
             z[2]=newpos[1]            
         lastz = z
@@ -313,38 +312,36 @@ def move_zombies():
 def action(cmd):
     global inventory
     global curpos
-    if cmd in ["w","a","s","d"]:
-        return move(cmd)
+    if cmd in ['1','2','3','4','6','7','8','9']:
+        curpos = move_obj(player,int(cmd),curpos)
+        return True
     elif cmd == 'g':
         items = []
         remove_obj(curpos)
         here=objs[curpos[0],curpos[1]]
-        print(here)
         while here != []:
-            print(here) 
             items += [here[0]]
             remove_obj(curpos)
-            here=objs[curpos[0],curpos[1]]            
+            here=objs[curpos[0],curpos[1]]
         inventory += items
-        print(inventory)
         add_obj(player,curpos[0],curpos[1])
         return True 
     else:
         return False
 
 
-##  _    _          
-## |_|xx|X|XXXXXXXX|||
-##      |X|         $
-##      |X|         $
-##      |X|      SETTING
-##      |X| PROPS & 
+##  ____    _    _          _        ____   ____   ____   ____
+## |____|  |_|xx|X|XXXXXXXX|||      |____| |____| |____| |____|
+## |____|       |X|         $       |____| |____| |____| |____|
+## |____|       |X|         $       |____| |____| |____| |____|
+## |____|       |X|      SETTING    |____| |____| |____| |____|
+## |____|       |X| PROPS &         |____| |____| |____| |____|
 
 add_obj(player,curpos[0],curpos[1])
 
-for i in range(100,120):
-    add_obj(make_wall(),i,101)
-    add_obj(make_wall(),i,110)
+##
+## Outer borders 
+##
 
 for i in range(0,map_size[0]-1):
     add_obj(make_wall(),i,0)
@@ -354,18 +351,25 @@ for i in range(0,map_size[1]-1):
     add_obj(make_wall(),0,i) 
     add_obj(make_wall(),map_size[0]-1,i)   
 
-add_obj(obj('=',"ammo",20,0),101,100)
+##
+## Starting building
+##
 
-make_zombie(100,102)
-make_zombie(100,103)
-make_zombie(102,100)
-make_zombie(102,102)
-make_zombie(102,103)
-make_zombie(104,115)
+for i in range(90,111):
+    add_obj(make_wall(),i,101)
+    add_obj(make_wall(),i,110)
+for i in range(101,105): 
+    add_obj(make_wall(),90,i)
+    add_obj(make_wall(),110,i)      
+for i in range(107,110): 
+    add_obj(make_wall(),90,i)
+    add_obj(make_wall(),110,i)      
 
-for i in range(150,175):
-    for j in range(100,125):
-        make_zombie(i,j)
+add_obj(obj('=',"ammo",20,0),100,105)
+add_obj(obj('=',"ammo",20,0),100,106)
+
+make_zombie(2,2)
+
 
 ##******************************************************************************
 ##******************************************************************************
@@ -383,9 +387,11 @@ while 1:
     while not actioned:
         move_zombies()
         curcommand = input('_')
-        if curcommand == "ree":
-            for i in range(1,100):
-                move_zombies()
+        if curcommand == "r":
+            some = int(input("#100s?"))
+            for n in range(1,some):
+                for i in range(1,100):
+                    move_zombies()
             make_screen(curpos)
         print()
         actioned = action(curcommand)
