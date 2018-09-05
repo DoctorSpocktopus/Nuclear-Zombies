@@ -11,6 +11,11 @@ class obj:
         obj.solid = solid #int, 0-2
     def __repr__(obj):
         return "({0},{1},{2},{3})".format(obj.char,obj.name,obj.hp,obj.solid)
+    def __eq__(self,other):
+        return self.name == other.name
+    def __ne__(self,other):
+        return not self.__eq__(other)
+        
 
 #Some default objects
 
@@ -43,6 +48,10 @@ map_size = [200,200]
 
 objs = np.empty((map_size[0],map_size[1]),dtype=type(player),order='C')
 
+
+
+##Prints off a screen representing the current play area
+
 def make_screen(pos):
     
     screen = ""
@@ -65,6 +74,7 @@ def make_screen(pos):
     
     return
 
+##adds an object o at position (x,y) in the obj array
 def add_obj(o,x,y):
     if objs[x,y] == None:
         objs[x,y]=[o,[]]
@@ -75,12 +85,19 @@ def add_obj(o,x,y):
     #print(objs[x,y])
     return
 
+##removes the top object at the position
 def remove_obj(pos):
     objs[pos[0],pos[1]]=objs[pos[0],pos[1]][1]
     
+## Calculates the distance between two objects 
 def distance(pos1, pos2):
     dis = math.sqrt((pos1[0]-pos2[0])**2+(pos1[1]-pos2[1])**2)
     return dis
+
+##build_radius builds a circle of radius r around point pos. 
+##
+## build_radius(r,pos) :
+##     int Pos -> list(Pos)
 
 def build_radius(r,pos):
     points = []
@@ -90,6 +107,56 @@ def build_radius(r,pos):
                 points +=[[i,j]]
     return points
 
+def build_vector(pos,dr):
+    vector = []
+    newpos = pos.copy()
+    x=newpos[0]
+    y=newpos[1]
+    i = 1
+    if dr == 1:
+        while newpos[0] > 0 and newpos[1] < map_size[1]:
+            newpos = [x-i,y+i]
+            vector += [newpos.copy()] 
+            i += 1
+    elif dr == 2:
+        while newpos[1] < map_size[1]:
+            newpos = [x,y+i]
+            vector += [newpos.copy()]
+            print (newpos)
+            i+=1
+    elif dr == 3:
+        while newpos[0] < map_size[0] and newpos[1] < map_size[1]:
+            newpos=[x+i,y+i]
+            vector += [newpos.copy()]
+            i+=1
+    elif dr == 4:
+        while newpos[0] > 0:
+            newpos=[x-i,y]
+            vector += [newpos.copy()]
+            i+=1
+    elif dr == 6:
+        while newpos [0] < map_size[0]:
+            newpos = [x+i,y]      
+            vector += [newpos.copy()]
+            i+=1
+    elif dr == 7:
+        while newpos[0] > 0 and newpos[1] >0:
+            newpos = [x-i,y-i]
+            vector += [newpos.copy()]
+            i+=1
+    elif dr == 8:
+        while newpos[1] > 0:
+            newpos = [x,y-i]
+            vector += [newpos.copy()]
+            i+=1
+    elif dr == 9:    
+        while newpos[0] < map_size[0] and newpos[1] > 0:
+            newpos = [x+i,y-i] 
+            vector += [newpos.copy()]
+            i+=1
+    return vector
+    
+        
 ## empty(pos): Consumes a position (x,y) and returns False if something of greater
 ## than 0 solidness is inside the square, True otherwise. 
 ## empty(list(int,int)->bool)
@@ -149,50 +216,38 @@ def empty(pos):
             return False
         else:
             return True and empty(checksquare[1])
-    
-
-def move(cmd):
-    global curpos 
-    
-    temppos = curpos.copy()
-    if   curcommand == "w":
-        temppos[1]-=1
-    elif curcommand == 'a':
-        temppos[0]-=1
-    elif curcommand == 's':
-        temppos[1]+=1
-    elif curcommand == 'd':
-        temppos[0]+=1
-    
-    if empty(temppos):
-        #print("the square's empty, I swear")
-        remove_obj(curpos)
-        curpos = temppos
-        add_obj(player,curpos[0],curpos[1])
-        return True
-    return False
-
-
-##
-##ZZZZ   ZZZ  Z   Z ZZZ  ZZZ ZZZZ  ZZZ
-##   Z  Z   Z ZZ ZZ Z Z   Z  Z    Z   
-##  Z   Z   Z Z Z Z ZZZ   Z  ZZZ   ZZ
-## Z    Z   Z Z   Z Z  Z  Z  Z       Z
-##ZZZZ   ZZZ  Z   Z ZZZ  ZZZ ZZZZ ZZZ 
-##
+################################################################################
+##                                                                            ##
+##                  ZZZZ   ZZZ  Z   Z ZZZ  ZZZ ZZZZ  ZZZ                      ##
+##                     Z  Z   Z ZZ ZZ Z Z   Z  Z    Z                         ##
+##                    Z   Z   Z Z Z Z ZZZ   Z  ZZZ   ZZ                       ##
+##                   Z    Z   Z Z   Z Z  Z  Z  Z       Z                      ##
+##                  ZZZZ   ZZZ  Z   Z ZZZ  ZZZ ZZZZ ZZZ                       ##
+##                                                                            ##
+################################################################################
 
 zombielist = []
 
+## make_zombie(x,y) mutates the zombie list to add an additional zombie. Also
+##    adds it to the object list. 
+## make_zombie int int -> obj
+
 def make_zombie(x,y):
+    
+    if x < 0 or x > map_size[0] or y < 0 or y >map_size[1]:
+        return []
+
     global zombielist 
     
-    zombiehp =25
+    zombiehp = 25
     newzombie = obj('z',"zomb",zombiehp,2) 
     zombielist += [[newzombie,x,y]]
     add_obj(newzombie,x,y)
     return newzombie
 
-## Need to impliment sorting of zombie array by distance from somewhere
+## move_zombies() : mutates the objects array to change the positions of the 
+##     zombies
+##
     
 
 def move_zombies():
@@ -201,13 +256,15 @@ def move_zombies():
     
     detectr = 5
         
+        
+    #The basket out of 1-20 where the zombie moves randomly
     randmove = range(1,4)
+    #The basket out of 1-20 where the zombie moves towards the player
     dirmove = range(5,15)
-    
-    lastz = zombielist[0]
-    
+         
+    # makes a copy of the zombie list, then creates a list of their positions
     zombiepos = zombielist.copy()
-    zombipos = map(lambda z: [z[1],z[2]],zombiepos)
+    zombiepos = map(lambda z: [z[1],z[2]],zombiepos)
     
     for z in zombielist:
         x = z[1]
@@ -217,17 +274,24 @@ def move_zombies():
         
         event = random.randint(1, 20)
         
+        #checks if zombie is not there and removes it if it isn't
+        if not objs[x,y] or objs[x,y][0].name != "zomb":
+            zombielist.remove(z)
+            continue
+        
+        
+        #determines if the zombie is close to any other zombies
+        closez = False
         rad = build_radius(detectr,[x,y])
-        
-        close = (distance([x,y],curpos)<=detectr)
-        closez = False        
-        
         for p in rad:
-            if p in zombipos:
+            if p in zombiepos:
                 zpos = p
                 closez = True
                 break
         
+        #determines if the zombie is close to the player
+        close = (distance([x,y],curpos)<=detectr)
+        #resets the directional movement variables if the player is close
         detectr = 5
         if close : 
             randmove = [1]
@@ -242,6 +306,7 @@ def move_zombies():
             newpos = move_obj(z[0],cmd,[x,y])
             z[1]=newpos[0]
             z[2]=newpos[1]
+        ## moves towards the player
         elif close and (event in dirmove):
             cmd = 0
             if curpos[1] == y:
@@ -268,7 +333,7 @@ def move_zombies():
             newpos = move_obj(z[0],cmd,[x,y])
             z[1]=newpos[0]
             z[2]=newpos[1]
-        #moves towards a zombie
+        ## moves towards a zombie
         elif closez and (event in dirmove):
             cmd = 0
             if zpos[1] == y:
@@ -295,7 +360,6 @@ def move_zombies():
             newpos = move_obj(z[0],cmd,[x,y])
             z[1]=newpos[0]
             z[2]=newpos[1]            
-        lastz = z
     return  
         
         
@@ -309,12 +373,49 @@ def move_zombies():
 ## |_|     |____| |_| |_|   |_|   |____| |_| \_\
 ##
 
+## shoot : takes nothing, then creates a vector. Examines 
+
+def shoot():
+    
+    def hit(obj,x,y):   
+        weapon_damage = 400+random.randint(5,20)
+        obj.hp -= weapon_damage
+        if obj.hp <= 0:
+            remove_obj([x,y])    
+    
+    global curpos
+    misschance = 0.25
+    cmd = int(input(" _"))
+    vec = build_vector(curpos,cmd)
+    running_objs = []
+    for i in vec:
+        if objs[i[0],i[1]]:
+            running_objs = objs[i[0],i[1]]
+            if running_objs[0].solid == 1:
+                if random.random() > misschance :
+                    hit(running_objs[0],i[0],i[1])
+                    return
+            elif running_objs[0].solid ==2:
+                hit(running_objs[0],i[0],i[1])
+                return
+            
+    
+        
+    
+
+## action : takes a command, cmd, (number from 1-4,6-9, or 'g') and then returns 
+##    True if an action was taken, False otherwise. 
+##
+##action : Char -> Bool
+##
+
 def action(cmd):
     global inventory
     global curpos
     if cmd in ['1','2','3','4','6','7','8','9']:
+        temppos = curpos.copy()
         curpos = move_obj(player,int(cmd),curpos)
-        return True
+        return not(curpos == temppos)
     elif cmd == 'g':
         items = []
         remove_obj(curpos)
@@ -326,6 +427,13 @@ def action(cmd):
         inventory += items
         add_obj(player,curpos[0],curpos[1])
         return True 
+    ## Shooting
+    elif cmd == '5':
+        ## Checks for ammo first
+        if not obj('=','ammo',20,0) in inventory:
+            return False
+        shoot()
+        return True
     else:
         return False
 
@@ -343,32 +451,54 @@ add_obj(player,curpos[0],curpos[1])
 ## Outer borders 
 ##
 
-for i in range(0,map_size[0]-1):
+for i in range(2,map_size[0]-1):
     add_obj(make_wall(),i,0)
+    add_obj(make_wall(),i,1)
+    add_obj(make_wall(),i,2)
     add_obj(make_wall(),i,map_size[1]-1)
+    add_obj(make_wall(),i,map_size[1]-2)
+    add_obj(make_wall(),i,map_size[1]-3)
 
-for i in range(0,map_size[1]-1): 
+for i in range(2,map_size[1]-2): 
     add_obj(make_wall(),0,i) 
+    add_obj(make_wall(),1,i) 
+    add_obj(make_wall(),2,i)
     add_obj(make_wall(),map_size[0]-1,i)   
+    add_obj(make_wall(),map_size[0]-2,i)   
+    add_obj(make_wall(),map_size[0]-3,i)
 
-##
-## Starting building
-##
+level = 1
 
-for i in range(90,111):
-    add_obj(make_wall(),i,101)
-    add_obj(make_wall(),i,110)
-for i in range(101,105): 
-    add_obj(make_wall(),90,i)
-    add_obj(make_wall(),110,i)      
-for i in range(107,110): 
-    add_obj(make_wall(),90,i)
-    add_obj(make_wall(),110,i)      
+if level == 1:
+    ##
+    ## Starting building
+    ##
 
-add_obj(obj('=',"ammo",20,0),100,105)
-add_obj(obj('=',"ammo",20,0),100,106)
-
-make_zombie(2,2)
+    for i in range(90,111):
+        add_obj(make_wall(),i,101)
+        add_obj(make_wall(),i,110)
+    for i in range(101,105): 
+        add_obj(make_wall(),90,i)
+        add_obj(make_wall(),110,i)      
+    for i in range(107,110): 
+        add_obj(make_wall(),90,i)
+        add_obj(make_wall(),110,i)      
+    
+    add_obj(make_wall(),110,106)
+    add_obj(make_wall(),110,105)
+    
+    add_obj(obj('=',"ammo",20,0),100,105)
+    add_obj(obj('=',"ammo",20,0),100,106)
+    
+    ##
+    ## HOME OF THE BADDIES!
+    ##
+    
+    make_zombie(100,98)
+    make_zombie(101,98)
+    make_zombie(102,98)
+    make_zombie(103,98)
+    make_zombie(104,98)
 
 
 ##******************************************************************************
@@ -384,16 +514,23 @@ make_screen(curpos)
 
 while 1:
     actioned = False
+    move_zombies()
     while not actioned:
-        move_zombies()
+        make_screen(curpos)
+        print()
         curcommand = input('_')
         if curcommand == "r":
             some = int(input("#100s?"))
-            for n in range(1,some):
-                for i in range(1,100):
-                    move_zombies()
-            make_screen(curpos)
-        print()
+            try:
+                for n in range(1,some):
+                    for i in range(1,100):
+                        move_zombies()
+            except:
+                print(zombielist)
+        elif curcommand == 'f':
+            print(zombielist)
+            checker = input("pos?")
+            make_screen(list(map(int,checker.split(','))))
+            input()
         actioned = action(curcommand)
-        make_screen(curpos)
     #print(curpos)
