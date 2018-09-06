@@ -548,4 +548,10 @@ while 1:
             make_screen(list(map(int,checker.split(','))))
             input()
         actioned = action(curcommand)
+        if player.hp <= 0:
+            add_obj(obj('%',"dead",1,1),curpos[0],curpos[1])
+            make_screen(curpos)
+            input("You fall, only to rise as a member of the shambling dead")
+            exit()
+            
     #print(curpos)
