@@ -449,6 +449,8 @@ def action(cmd):
             return False
         shoot()
         return True
+    elif cmd == '.':
+        return True
     else:
         return False
 
