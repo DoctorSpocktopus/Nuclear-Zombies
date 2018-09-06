@@ -35,6 +35,8 @@ curpos = [100,103]
 
 player = obj('@',"user",100,1)
 
+player_armour = 15
+
 inventory = []
 
 ##************************************************************************
@@ -253,6 +255,8 @@ def make_zombie(x,y):
 def move_zombies():
     global zombielist
     global curpos
+    global player
+    global player_armour
     
     detectr = 5
         
@@ -289,13 +293,20 @@ def move_zombies():
                 closez = True
                 break
         
+        
+        detectr = 7
+        stealth = 6
+        
         #determines if the zombie is close to the player
-        close = (distance([x,y],curpos)<=detectr)
+        close = (distance([x,y],curpos)<=stealth)
+
         #resets the directional movement variables if the player is close
-        detectr = 5
+        
         if close : 
+            attack = distance([x,y],curpos) <=math.sqrt(2)   
+            
             randmove = [1]
-            dirmove = range(2,20)        
+            dirmove = range(2,20)
         else:
             randmove = range(1,10)
             dirmove = range(11,20)            
@@ -308,31 +319,35 @@ def move_zombies():
             z[2]=newpos[1]
         ## moves towards the player
         elif close and (event in dirmove):
-            cmd = 0
-            if curpos[1] == y:
-                if curpos[0] == x:
-                    cmd = 5
-                elif curpos[0] < x:
-                    cmd = 4
-                elif curpos[0] > x:
-                    cmd = 6
-            elif curpos[1] > y:
-                if curpos[0] == x:
-                    cmd = 2
-                elif curpos[0] < x:
-                    cmd = 1
-                elif curpos[0] > x:
-                    cmd = 3
-            elif curpos[1] < y:
-                if curpos[0] == x:
-                    cmd = 8
-                elif curpos[0] < x:
-                    cmd = 7
-                elif curpos[0] > x:
-                    cmd = 9
-            newpos = move_obj(z[0],cmd,[x,y])
-            z[1]=newpos[0]
-            z[2]=newpos[1]
+            if not attack:
+                cmd = 0
+                if curpos[1] == y:
+                    if curpos[0] == x:
+                        cmd = 5
+                    elif curpos[0] < x:
+                        cmd = 4
+                    elif curpos[0] > x:
+                        cmd = 6
+                elif curpos[1] > y:
+                    if curpos[0] == x:
+                        cmd = 2
+                    elif curpos[0] < x:
+                        cmd = 1
+                    elif curpos[0] > x:
+                        cmd = 3
+                elif curpos[1] < y:
+                    if curpos[0] == x:
+                        cmd = 8
+                    elif curpos[0] < x:
+                        cmd = 7
+                    elif curpos[0] > x:
+                        cmd = 9
+                newpos = move_obj(z[0],cmd,[x,y])
+                z[1]=newpos[0]
+                z[2]=newpos[1]
+            else:
+                if random.randint(1,20)>=player_armour:
+                    player.hp -= 10 + random.randint(1,20)
         ## moves towards a zombie
         elif closez and (event in dirmove):
             cmd = 0
