@@ -39,6 +39,8 @@ player_armour = 15
 
 inventory = []
 
+ammo = 0 
+
 ##************************************************************************
 
 
@@ -392,6 +394,8 @@ def move_zombies():
 
 def shoot():
     
+    global ammo
+    
     def hit(obj,x,y):   
         weapon_damage = 400+random.randint(5,20)
         obj.hp -= weapon_damage
@@ -444,9 +448,15 @@ def action(cmd):
         return True 
     ## Shooting
     elif cmd == '5':
+        global ammo
         ## Checks for ammo first
-        if not obj('=','ammo',20,0) in inventory:
-            return False
+        if ammo <= 0:
+            if not obj('=','ammo',20,0) in inventory:
+                return False
+            ## Reload
+            inventory.remove(obj('=','ammo',20,0))
+            ammo = 13
+        ammo -= 1
         shoot()
         return True
     elif cmd == '.':
