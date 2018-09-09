@@ -105,8 +105,8 @@ def distance(pos1, pos2):
 
 def build_radius(r,pos):
     points = []
-    for i in range(-r,r):
-        for j in range(-r,r):
+    for i in range(pos[0]-r,pos[0]+r):
+        for j in range(pos[0]-r,pos[0]+r):
             if distance(pos,[i,j])<=r:
                 points +=[[i,j]]
     return points
@@ -270,7 +270,7 @@ def move_zombies():
          
     # makes a copy of the zombie list, then creates a list of their positions
     zombiepos = zombielist.copy()
-    zombiepos = map(lambda z: [z[1],z[2]],zombiepos)
+    zombiepos = list(map(lambda z: [z[1],z[2]],zombiepos))
     
     for z in zombielist:
         x = z[1]
@@ -296,7 +296,7 @@ def move_zombies():
                 break
         
         
-        detectr = 7
+        detectr = 10
         stealth = 6
         
         #determines if the zombie is close to the player
@@ -311,7 +311,7 @@ def move_zombies():
             dirmove = range(2,20)
         else:
             randmove = range(1,10)
-            dirmove = range(11,20)            
+            dirmove = range(11,20)
         
         ## random movement
         if event in randmove or (not close and not closez):
@@ -404,7 +404,10 @@ def shoot():
     
     global curpos
     misschance = 0.25
-    cmd = int(input(" _"))
+    try:
+        cmd = int(input(" _"))
+    except:
+        return
     vec = build_vector(curpos,cmd)
     running_objs = []
     for i in vec:
@@ -526,7 +529,8 @@ if level == 1:
     make_zombie(102,98)
     make_zombie(103,98)
     make_zombie(104,98)
-
+    for i in range(1,40):
+        make_zombie(random.randint(150,180),random.randint(10,190))
 
 ##******************************************************************************
 ##******************************************************************************
