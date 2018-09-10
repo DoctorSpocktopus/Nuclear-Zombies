@@ -21,7 +21,7 @@ class obj:
 
 def make_wall():
     wallchar = 'O'
-    wallhp = 1000
+    wallhp = 200
     return obj(wallchar,"wall",wallhp,2)
 
 
@@ -79,7 +79,7 @@ def make_screen(pos):
     return
 
 ##adds an object o at position (x,y) in the obj array
-def add_obj(o,x,y):
+def add_obj(o,x,y): 
     if objs[x,y] == None:
         objs[x,y]=[o,[]]
     else:
@@ -219,7 +219,48 @@ def empty(pos):
         if checksquare[0].solid > 0:
             return False
         else:
-            return True and empty(checksquare[1])
+            return empty(checksquare[1])
+    return 
+        
+
+##
+##
+##
+##
+        
+bomblist = []
+        
+def make_bomb(pos):
+    global bomblist
+    bomb = obj('*',"bomb",10,0)
+    bomblist += [[bomb,pos[0],pos[1]]]
+    add_obj(bomb,100,100)
+    return 
+
+#implement recursively with recursive helper that removes extras
+
+def explosion(pos):
+    blast_radius = 4
+    blast_damage = 40+random.randint(1,20)
+    rad = build_radius(blast_radius,pos)
+    for p in rad: 
+        if objs[p[0],p[1]]:
+            if objs[p[0],p[1]][0]:
+                objs[p[0],p[1]][0].hp -= blast_damage
+    rad = build_radius(blast_radius//2,pos)
+    for p in rad: 
+        if objs[p[0],p[1]]:
+            if objs[p[0],p[1]][0]:
+                objs[p[0],p[1]][0].hp -= blast_damage    
+    return
+    
+def use_bombs():
+    global bomblist
+    
+    for b in bomblist:
+        explosion([b[1],b[2]])
+    
+        
 ################################################################################
 ##                                                                            ##
 ##                  ZZZZ   ZZZ  Z   Z ZZZ  ZZZ ZZZZ  ZZZ                      ##
@@ -397,7 +438,7 @@ def shoot():
     global ammo
     
     def hit(obj,x,y):   
-        weapon_damage = 400+random.randint(5,20)
+        weapon_damage = 10+random.randint(5,20)
         obj.hp -= weapon_damage
         if obj.hp <= 0:
             remove_obj([x,y])    
@@ -462,7 +503,12 @@ def action(cmd):
         ammo -= 1
         shoot()
         return True
+    ## do nothing
     elif cmd == '.':
+        return True
+    ## detonate bombs
+    elif cmd == 'c':
+        use_bombs()
         return True
     else:
         return False
@@ -475,11 +521,63 @@ def action(cmd):
 ## |____|       |X|      SETTING    |____| |____| |____| |____|
 ## |____|       |X| PROPS &         |____| |____| |____| |____|
 
+
+##
+
+
+
 add_obj(player,curpos[0],curpos[1])
 
 ##
 ## Outer borders 
 ##
+
+## building(ulpos,size,doordir): creates a size x size square "building" 
+## which has upper left corner at position ulpos, and "doors" (open
+## spaces) at sides indicated in doordir
+##
+## doordir is a multiple of all desired door edges
+
+##  2 OO 3 OO5
+##  O        O
+## 19        7
+##  O        O
+## 17OO 13 OO11
+
+##For example, if you wanted the top and bottom to be open, you would set 
+## doordir = 3*5
+##For a box with no corners, 
+## doordir = 2*5*11*17
+##For a box with only corners,
+## doordir = 3*7*13*19
+##For nothing,
+## doordir = 3*7*13*19*2*5*11*17
+##For everything,
+## doordir = 1
+
+def make_building(ulpos,size,doordir):
+    
+    if doordir % 2 != 0:
+        add_obj(make_wall(),ulpos[0],ulpos[1])
+    if doordir % 3 != 0:
+        for i in range(1,size-1):
+            add_obj(make_wall(),ulpos[0]+i,ulpos[1])
+    if doordir % 5 != 0:
+        add_obj(make_wall(),ulpos[0]+size-1,ulpos[1])
+    if doordir % 7 != 0: 
+        for i in range(1,size-1):
+            add_obj(make_wall(),ulpos[0]+size-1,ulpos[1]+i)
+    if doordir % 11 != 0: 
+        add_obj(make_wall(),ulpos[0]+size-1,ulpos[1]+size-1)
+    if doordir % 13 != 0:
+        for i in range(1,size-1):
+            add_obj(make_wall(),ulpos[0]+i,ulpos[1]+size-1)
+    if doordir % 17 != 0:
+        add_obj(make_wall(), ulpos[0],ulpos[1]+size-1)
+    if doordir % 19 != 0: 
+        for i in range(1,size-1):
+            add_obj(make_wall(), ulpos[0], ulpos[1]+i)
+    return
 
 for i in range(2,map_size[0]-1):
     add_obj(make_wall(),i,0)
@@ -503,22 +601,38 @@ if level == 1:
     ##
     ## Starting building
     ##
-
-    for i in range(90,111):
-        add_obj(make_wall(),i,101)
-        add_obj(make_wall(),i,110)
-    for i in range(101,105): 
-        add_obj(make_wall(),90,i)
-        add_obj(make_wall(),110,i)      
-    for i in range(107,110): 
-        add_obj(make_wall(),90,i)
-        add_obj(make_wall(),110,i)      
     
-    add_obj(make_wall(),110,106)
-    add_obj(make_wall(),110,105)
+    make_building([100,101],10,19)
+    make_building([90,101],10,19*7)
+    for i in range(0,4):    
+        add_obj(obj('=',"ammo",20,0),94+i,103)
+        add_obj(obj('=',"ammo",20,0),94,103+i)
+        add_obj(obj('=',"ammo",20,0),94+i,103+4)
+        add_obj(obj('=',"ammo",20,0),94+4,103+i) 
+    add_obj(obj('=',"ammo",20,0),94+4,103+4) 
+        
+        
+    make_building([93,102],7,1)
     
-    add_obj(obj('=',"ammo",20,0),100,105)
-    add_obj(obj('=',"ammo",20,0),100,106)
+    #for i in range(90,111):
+        #add_obj(make_wall(),i,101)
+        #add_obj(make_wall(),i,110)
+    #for i in range(101,105): 
+        #add_obj(make_wall(),90,i)
+        #add_obj(make_wall(),110,i)      
+    #for i in range(107,110): 
+        #add_obj(make_wall(),90,i)
+        #add_obj(make_wall(),110,i)      
+    
+    #add_obj(make_wall(),110,106)
+    #add_obj(make_wall(),110,105)
+#    add_obj(make_wall(),90,106)
+#    add_obj(make_wall(),90,105)    
+    
+    #add_obj(obj('=',"ammo",20,0),100,105)
+    #add_obj(obj('=',"ammo",20,0),100,106)
+    
+    
     
     ##
     ## HOME OF THE BADDIES!
