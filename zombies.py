@@ -72,6 +72,27 @@ def make_screen(pos):
                 screen+=curobj.char
             else:
                 screen+='.'
+        ## The number of lines from the top where the display comes from
+        starting_line = 2
+        if y==ypos+starting_line:
+            screen+="          Ammo"
+        if y==ypos+starting_line+1:
+            global ammo
+            ammo_str = ""
+            for j in range(0,ammo):
+                ammo_str += "="
+            for j in range(0,13-ammo):
+                ammo_str += "-"
+            screen+="          "+ammo_str            
+        if y==ypos+starting_line+3:
+            screen+="          Health"
+        if y==ypos+starting_line+4:
+            hp_str=""
+            for j in range(0,player.hp//20):
+                hp_str+="<3"
+            for j in range(0,5-player.hp//20):
+                hp_str+="__"
+            screen+="          "+hp_str
         screen+="\n"
         
     print(screen)
@@ -81,17 +102,17 @@ def make_screen(pos):
 ##adds an object o at position (x,y) in the obj array
 def add_obj(o,x,y): 
     if objs[x,y] == None:
-        objs[x,y]=[o,[]]
+        objs[x,y]=[o]
     else:
         #print("2 scooops!??!?")
-        multi_obj = [o,objs[x,y]]
+        multi_obj = [o]+objs[x,y]
         objs[x,y]=multi_obj
     #print(objs[x,y])
     return
 
 ##removes the top object at the position
 def remove_obj(pos):
-    objs[pos[0],pos[1]]=objs[pos[0],pos[1]][1]
+    objs[pos[0],pos[1]]=objs[pos[0],pos[1]][1:]
     
 ## Calculates the distance between two objects 
 def distance(pos1, pos2):
@@ -126,7 +147,6 @@ def build_vector(pos,dr):
         while newpos[1] < map_size[1]:
             newpos = [x,y+i]
             vector += [newpos.copy()]
-            print (newpos)
             i+=1
     elif dr == 3:
         while newpos[0] < map_size[0] and newpos[1] < map_size[1]:
@@ -210,18 +230,17 @@ def empty(pos):
     checksquare = objs[pos[0],pos[1]]
     if checksquare == None or checksquare == []:
         return True
-    if checksquare[1] == []:
-        if checksquare[0].solid > 0:
+    for i in checksquare:
+        if i.solid > 0:
             return False
-        else:
-            return True
-    else:
-        if checksquare[0].solid > 0:
-            return False
-        else:
-            return empty(checksquare[1])
-    return 
+    return True
         
+
+def make_refuse(pos):
+    x=pos[0]
+    y=pos[1]
+    rfse = obj("%","rfse",100,0)
+    add_obj(rfse,x,y)
 
 ##
 ##
@@ -442,6 +461,7 @@ def shoot():
         obj.hp -= weapon_damage
         if obj.hp <= 0:
             remove_obj([x,y])    
+            make_refuse([x,y])
     
     global curpos
     misschance = 0.25
@@ -602,49 +622,54 @@ if level == 1:
     ## Starting building
     ##
     
-    make_building([100,101],10,19)
-    make_building([90,101],10,19*7)
+    #for i in range(1,5):
+    add_obj(obj('=',"ammo",20,0),101,101)
+    add_obj(obj('=',"ammo",20,0),101,102)
+    add_obj(obj('=',"ammo",20,0),101,103)
+    add_obj(obj('=',"ammo",20,0),101,104)
+    add_obj(obj('=',"ammo",20,0),101,105)
+    
+    
+    make_building([100,100],11,19*13)
+    make_building([89,100],11,19*7)
+    make_building([78,100],11,13*7)
     for i in range(0,4):    
-        add_obj(obj('=',"ammo",20,0),94+i,103)
-        add_obj(obj('=',"ammo",20,0),94,103+i)
-        add_obj(obj('=',"ammo",20,0),94+i,103+4)
-        add_obj(obj('=',"ammo",20,0),94+4,103+i) 
-    add_obj(obj('=',"ammo",20,0),94+4,103+4) 
-        
-        
-    make_building([93,102],7,1)
+        add_obj(obj('=',"ammo",20,0),92+i,103)
+        add_obj(obj('=',"ammo",20,0),92,103+i)
+        add_obj(obj('=',"ammo",20,0),92+i,103+4)
+        add_obj(obj('=',"ammo",20,0),92+4,103+i) 
+    add_obj(obj('=',"ammo",20,0),92+4,103+4) 
+    make_building([93,104],3,1)
+    add_obj(obj('=',"ammo",20,0),94,105) 
     
-    #for i in range(90,111):
-        #add_obj(make_wall(),i,101)
-        #add_obj(make_wall(),i,110)
-    #for i in range(101,105): 
-        #add_obj(make_wall(),90,i)
-        #add_obj(make_wall(),110,i)      
-    #for i in range(107,110): 
-        #add_obj(make_wall(),90,i)
-        #add_obj(make_wall(),110,i)      
+    make_building([91,102],7,1)
     
-    #add_obj(make_wall(),110,106)
-    #add_obj(make_wall(),110,105)
-#    add_obj(make_wall(),90,106)
-#    add_obj(make_wall(),90,105)    
+    make_building([100,111],6,3*13)
+    make_building([105,111],6,3*13)
+    make_building([100,117],11,3*19)
+
     
-    #add_obj(obj('=',"ammo",20,0),100,105)
-    #add_obj(obj('=',"ammo",20,0),100,106)
+    make_building([78,111],6,3*13)
+    make_building([83,111],6,3*13)
+    make_building([78,117],11,3*7)    
     
+    make_building([89,117],11,19*7*13)
+    make_building([92,125],5,2*5*11*17)
+    make_building([93,126],3,1)
     
+    make_building([70,141],60,2*5*7*11*13*17*19)
     
     ##
     ## HOME OF THE BADDIES!
     ##
     
-    make_zombie(100,98)
+    make_zombie(101,97)
     make_zombie(101,98)
     make_zombie(102,98)
     make_zombie(103,98)
     make_zombie(104,98)
-    for i in range(1,40):
-        make_zombie(random.randint(150,180),random.randint(10,190))
+    for i in range(1,30):
+        make_zombie(94+random.randint(-10,10),130+random.randint(1,10))
 
 ##******************************************************************************
 ##******************************************************************************
