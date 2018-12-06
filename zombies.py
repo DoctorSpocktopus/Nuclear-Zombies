@@ -80,7 +80,7 @@ def make_screen(pos):
             global ammo
             ammo_str = ""
             for j in range(0,ammo):
-                ammo_str += "="
+                ammo_str += "!"
             for j in range(0,13-ammo):
                 ammo_str += "-"
             screen+="          "+ammo_str            
@@ -236,11 +236,9 @@ def empty(pos):
     return True
         
 
-def make_refuse(pos):
-    x=pos[0]
-    y=pos[1]
+def make_refuse():
     rfse = obj("%","rfse",100,0)
-    add_obj(rfse,x,y)
+    return(rfse)
 
 ##
 ##
@@ -251,33 +249,48 @@ bomblist = []
         
 def make_bomb(pos):
     global bomblist
-    bomb = obj('*',"bomb",10,0)
+    bomb = obj('*',"bomb",1,0)
     bomblist += [[bomb,pos[0],pos[1]]]
-    add_obj(bomb,100,100)
+    add_obj(bomb,pos[0],pos[1])
     return 
 
 #implement recursively with recursive helper that removes extras
+
+def null_obj():
+    return obj(".","null",1,0)
+
 
 def explosion(pos):
     blast_radius = 4
     blast_damage = 40+random.randint(1,20)
     rad = build_radius(blast_radius,pos)
     for p in rad: 
-        if objs[p[0],p[1]]:
-            if objs[p[0],p[1]][0]:
-                objs[p[0],p[1]][0].hp -= blast_damage
-    rad = build_radius(blast_radius//2,pos)
-    for p in rad: 
-        if objs[p[0],p[1]]:
-            if objs[p[0],p[1]][0]:
-                objs[p[0],p[1]][0].hp -= blast_damage    
-    return
-    
+        p_o_list = objs[p[0],p[1]]
+        if p_o_list:
+            for i in range(0,len(p_o_list)):
+                o=p_o_list[i]
+                o.hp -= blast_damage 
+                if o.hp <= 0:
+                    p_o_list[i] = null_obj()
+                    if o.solid > 0:
+                        p_o_list[i] = make_refuse()
+            #This could cause issues later on - shallow vs deep copy?
+            new_p_o_list = p_o_list.copy()
+            print(p_o_list)
+            for o in p_o_list:
+                try:
+                    new_p_o_list = new_p_o_list.remove(null_obj())
+                except:
+                    pass
+            p_o_list=new_p_o_list
+            print(p_o_list)
+            
+
 def use_bombs():
     global bomblist
-    
     for b in bomblist:
         explosion([b[1],b[2]])
+    bomblist = []
     
         
 ################################################################################
@@ -450,7 +463,8 @@ def move_zombies():
 ## |_|     |____| |_| |_|   |_|   |____| |_| \_\
 ##
 
-## shoot : takes nothing, then creates a vector. Examines 
+## shoot : takes nothing, then creates a vector. Examines each sqaure in the 
+## vector's path and reduces the health by 
 
 def shoot():
     
@@ -461,7 +475,7 @@ def shoot():
         obj.hp -= weapon_damage
         if obj.hp <= 0:
             remove_obj([x,y])    
-            make_refuse([x,y])
+            add_obj(make_refuse(),x,y)
     
     global curpos
     misschance = 0.25
@@ -670,6 +684,13 @@ if level == 1:
     make_zombie(104,98)
     for i in range(1,30):
         make_zombie(94+random.randint(-10,10),130+random.randint(1,10))
+        
+    ##bombs 
+    
+    add_obj(obj('=',"ammo",20,0),101,102)
+    add_obj(obj('=',"ammo",20,0),101,103)
+    add_obj(obj('=',"ammo",20,0),101,104)    
+    make_bomb([101,101])
 
 ##******************************************************************************
 ##******************************************************************************
