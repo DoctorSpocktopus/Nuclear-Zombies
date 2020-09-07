@@ -35,10 +35,13 @@ curpos = [100,103]
 
 player = obj('@',"user",100,1)
 
+# Zombies need to role over this number to hit
 player_armour = 15
 
+# Starting inventory
 inventory = []
 
+# Starting ammo count
 ammo = 0 
 
 ##************************************************************************
